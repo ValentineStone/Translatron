@@ -47,17 +47,17 @@ public class PNodeStateAssembly
 	
 	public static boolean match(Lexeme _lexeme, Lexeme.Type _type)
 	{
-		return _lexeme != null && _lexeme.type == _type;
+		return _lexeme != null && (_lexeme.type == _type || _type == null);
 	}
 	
 	public static boolean match(Lexeme _lexeme, Lexeme.Type _type, Lexeme.Subtype _subtype)
 	{
-		return match(_lexeme, _type) && _lexeme.subtype == _subtype;
+		return match(_lexeme, _type) && (_lexeme.subtype == _subtype || _subtype == null);
 	}
 	
 	public static boolean match(Lexeme _lexeme, Lexeme.Type _type, Lexeme.Subtype _subtype, String _string)
 	{
-		return match(_lexeme, _type, _subtype) && _lexeme.string != null && _lexeme.string.equals(_string);
+		return match(_lexeme, _type, _subtype) && (_string == null || _lexeme.string != null && _lexeme.string.equals(_string));
 	}
 	
 	
@@ -94,21 +94,28 @@ public class PNodeStateAssembly
 	public static class State
 	{
 		public final String name;
-		private State(String _name){name = _name;}
 		public String toString() {return name;}
 		
+
+		private State(String _name, int _capacity)
+		{
+			name = _name;
+			capacity = _capacity;
+		}
+		
 		public final List<Transaction> transactions = new ArrayList<>();
+		public final int capacity;
 		
 
 		
-		public static final State SIMPLE_LEXEME = new State("SIMPLE_LEXEME")
+		public static final State SIMPLE_LEXEME = new State("SIMPLE_LEXEME",0)
 		{
 			{
 				transactions.add(new Transaction(BasicLexeme.Defaults.ANY, null));
 			}
 		};
 		
-		public static final State SIMPLE_BLOCK = new State("SIMPLE_BLOCK")
+		public static final State SIMPLE_BLOCK = new State("SIMPLE_BLOCK",-1)
 		{
 			{
 				transactions.add(new Transaction(BasicLexeme.Defaults.BLOCK_CLOSE, null));
@@ -116,7 +123,7 @@ public class PNodeStateAssembly
 			}
 		};
 		
-		public static final State STATEMENT = new State("STATEMENT")
+		public static final State STATEMENT = new State("STATEMENT",1)
 		{
 			{
 				transactions.add(new Transaction(BasicLexeme.Defaults.BLOCK_OPEN, SIMPLE_BLOCK));
@@ -124,7 +131,7 @@ public class PNodeStateAssembly
 			}
 		};
 		
-		public static final State ROOT = new State("ROOT")
+		public static final State ROOT = new State("ROOT",-1)
 		{
 			{
 				transactions.add(new Transaction(BasicLexeme.Defaults.EOF, null));
@@ -146,6 +153,7 @@ public class PNodeStateAssembly
 			return null;
 		
 		PNode pnode = new PNode();
+		pnode.createState = _state;
 		
 		for (int i = 0; i < _lexemes.size(); i++)
 		{
@@ -160,21 +168,32 @@ public class PNodeStateAssembly
 					if (transaction.state == null)
 					{
 						pnode.lexemes.add(_lexemes.get(i));
+						System.err.println("\t<+lexeme " + _lexemes.get(i));
 						System.err.println("<n-----------------------------" + _state);
 						return pnode;
 					}
 					
 					else if (transaction.state == _state)
 					{
+						System.err.println("\t+lexeme " + _lexemes.get(i));
 						pnode.lexemes.add(_lexemes.get(i));
 						break;
 					}
 					
 					else
 					{
-						PNode child = assemble(_lexemes.subList(i, _lexemes.size()), transaction.state);
-						i += child.getLength(true) - 1; // -1 to compensate for i++ in the loop
-						System.err.println("child $ " + child.getLength(false) + " : " + child);
+						if (_state.capacity == -1 || pnode.childs.size() < _state.capacity)
+						{
+							PNode child = assemble(_lexemes.subList(i, _lexemes.size()), transaction.state);
+							i += child.getLength(true) - 1; // -1 to compensate for i++ in the loop
+							pnode.add(child);
+							System.err.println("\t+child $ " + child.getLength(false) + " : " + child);
+						}
+						else
+						{
+							System.err.println("<o-----------------------------" + _state);
+							return pnode;
+						}
 						break;
 					}
 				}

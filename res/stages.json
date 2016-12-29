@@ -1,0 +1,109 @@
+{
+	version: 1,
+	langType: "c++",
+	
+	stages:
+	[
+		{
+			name: "root",
+			states:
+			[
+				{
+					transactions:
+					[
+						{
+							on:
+							{
+								type: "EOF"
+							},
+							to:
+							{
+								stage: null
+							}
+						},
+						{
+							to:
+							{
+								stage: "statement"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			name: "statement",
+			iterations: 1,
+			states:
+			[
+				{
+					transactions:
+					[
+						{
+							on:
+							{
+								type: "BRACKET",
+								text: "{"
+							},
+							to:
+							{
+								stage: "simple-block"
+							}
+						},
+						{
+							to:
+							{
+								stage: "simple-lexeme"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			name: "simple-block",
+			states:
+			[
+				{
+					transactions:
+					[
+						{
+							on:
+							{
+								type: "BRACKET",
+								text: "}"
+							},
+							to:
+							{
+								stage: null
+							}
+						},
+						{
+							to:
+							{
+								stage: "statement"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			name: "simple-lexeme",
+			states:
+			[
+				{
+					transactions:
+					[
+						{
+							to:
+							{
+								stage: null
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

@@ -84,6 +84,8 @@ public class BasicLexeme
 	
 	public boolean equals(BasicLexeme _lexeme)
 	{
+		//System.err.println(this + " ? " + _lexeme);
+		
 		return
 			_lexeme != null &&
 			(

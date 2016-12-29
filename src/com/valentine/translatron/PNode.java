@@ -11,6 +11,8 @@ public class PNode
 	public Lexeme lexeme = null;
 	public Type type = Type.UNDEFINED;
 	public Subtype subtype = Subtype.UNDEFINED;
+	public PNodeStateAssembly.State createState = null;
+	public String comments = null;
 	
 	public static enum Type
 	{
@@ -75,6 +77,17 @@ public class PNode
 			stringBuilder
 				.append("-");
 		
+		if (createState != null)
+			stringBuilder
+				.append(", $")
+				.append(createState);
+		
+		if (comments != null)
+			stringBuilder
+				.append(", \"")
+				.append(comments)
+				.append('"');
+		
 		if (type != Type.UNDEFINED)
 			stringBuilder
 				.append(", ")
@@ -124,23 +137,33 @@ public class PNode
 		
 		if (!childs.isEmpty())
 		{
-			stringBuilder
-				.append('\n')
-				.append(_indentationString)
-				.append('{');
-		
-			for (PNode child : childs)
+			if (childs.size() > 1)
 			{
 				stringBuilder
 					.append('\n')
-					.append(nextIndentationString)
-					.append(child.toText(nextIndentationString));
-			}
+					.append(_indentationString)
+					.append('{');
 			
-			stringBuilder
+				for (PNode child : childs)
+				{
+					stringBuilder
+						.append('\n')
+						.append(nextIndentationString)
+						.append(child.toText(nextIndentationString));
+				}
+				
+				stringBuilder
+					.append('\n')
+					.append(_indentationString)
+					.append("}");
+			}
+			else
+			{
+				stringBuilder
 				.append('\n')
-				.append(_indentationString)
-				.append("}");
+				.append(nextIndentationString)
+				.append(childs.get(0).toText(nextIndentationString));
+			}
 		}
 		
 		return stringBuilder.toString();
@@ -155,6 +178,8 @@ public class PNode
 		
 		if (__length == -1)
 		{
+			__length = 0;
+			
 			for (PNode child : childs)
 				__length += child.getLength(_remake);
 			

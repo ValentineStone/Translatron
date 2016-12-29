@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-import com.valentine.translatron.PNodeStateAssembly.*;
+import com.valentine.translatron.statemachime.*;
 
 public class Main
 {
@@ -29,7 +29,13 @@ public class Main
 		
 		//PNode pnode = Parser.parse(lexemes);
 		
-		PNode pnode = PNodeStateAssembly.assemble(lexemes, State.ROOT);
+		//PNode pnode = PNodeStateAssembly.assemble(lexemes, State.ROOT);
+		
+		Machine machine = JsonStateMachine.load(new File("res/stages.json"));
+		
+		System.err.println(machine);
+		
+		PNode pnode = JsonStateMachine.assemble(machine, lexemes);
 		
 		System.err.println(pnode.toText());
 	}
