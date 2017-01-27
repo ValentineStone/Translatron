@@ -3,6 +3,8 @@ package com.valentine.translatron.statemachime;
 import java.io.*;
 import java.util.*;
 
+import javax.swing.*;
+
 import com.google.gson.*;
 import com.valentine.translatron.*;
 
@@ -30,7 +32,16 @@ public final class JsonStateMachine
 		return assemble(_machine, _lexemes, _stage, _state, pnode);
 	}
 	
-	private static PNode assemble(Machine _machine, List<Lexeme> _lexemes, String _stage, String _state, PNode _pnode)
+	private static PNode assemble(Machine _machine, List<Lexeme> _lexemes, String _stage, String _state, Lexeme _incoming)
+	{
+		PNode pnode = new PNode();
+		pnode.lexemes.add(_incoming);
+		pnode.comments = _stage + "::" + _state;
+		
+		return assemble(_machine, _lexemes, _stage, _state, pnode);
+	}
+	
+	/*private static PNode assemble(Machine _machine, List<Lexeme> _lexemes, String _stage, String _state, PNode _pnode)
 	{
 		System.err.println(">---------------------------------------------------------");
 		System.err.println(_stage + " " + _stage);
@@ -39,7 +50,7 @@ public final class JsonStateMachine
 		Stage stage = _machine.stagesMap.get(_stage);
 		State state = stage.statesMap.get(_state);
 		
-		for (int i = 0; i < stage.iterations || stage.indefinite;)
+		for (int i = 0; (i < stage.iterations || stage.indefinite) && i < _lexemes.size();)
 		{
 			boolean matched = false;
 			
@@ -64,7 +75,7 @@ public final class JsonStateMachine
 					
 					if (to.stage != null)
 					{
-						PNode child = assemble(_machine, _lexemes.subList(i, _lexemes.size()), to.stage, to.state);
+						PNode child = assemble(_machine, _lexemes.subList(i+1, _lexemes.size()), to.stage, to.state);
 						_pnode.childs.add(child);
 						i += child.getLength(true);
 						System.err.println("\tchild len: " + child.getLength(false));
@@ -91,6 +102,67 @@ public final class JsonStateMachine
 
 		System.err.println(_pnode.toText());
 		System.err.println("<---------------------------------------------------------");
+		return _pnode;
+	}*/
+	
+	private static PNode assemble(Machine _machine, List<Lexeme> _lexemes, String _stage, String _state, PNode _pnode)
+	{
+		Stage stage = _machine.stagesMap.get(_stage);
+		State state = stage.statesMap.get(_state);
+		
+		for (int i = 0; (i < stage.iterations || stage.indefinite) && i < _lexemes.size();)
+		{
+			JOptionPane.showMessageDialog(null, _stage + " :: " + _state);
+			
+			boolean matched = false;
+			
+			for (Transaction transaction : state.transactions)
+			{
+				On on = transaction.on;
+				To to = transaction.to;
+				
+				if (PNodeStateAssembly.match(_lexemes.get(i), on.type, on.subtype, on.text))
+				{
+					matched = true;
+					
+					JOptionPane.showMessageDialog(null, to.toString() + to.isUp() + to.isToStage() + to.isToState());
+					
+					if (to.isUp())
+					{
+						_pnode.lexemes.add(_lexemes.get(i));
+						return _pnode;
+					}
+					
+					else if (to.isToStage())
+					{
+						PNode child;
+						if (transaction.consume)
+							child = assemble(_machine, _lexemes.subList(i, _lexemes.size()), to.stage, to.state);
+						else
+							child = assemble(_machine, _lexemes.subList(i+1, _lexemes.size()), to.stage, to.state, _lexemes.get(i));
+						
+						_pnode.childs.add(child);
+						i += child.getLength(true);
+					}
+					
+					else if (to.isToState())
+					{
+						state = stage.statesMap.get(to.state);
+						_pnode.lexemes.add(_lexemes.get(i));
+						i++;
+					}
+					
+					break;
+				}
+			}
+			
+			if (!matched)
+			{	
+				_pnode.type = PNode.Type.ERROR;
+				i++;
+			}
+		}
+		
 		return _pnode;
 	}
 	
@@ -143,6 +215,8 @@ public final class JsonStateMachine
 						
 						if (transaction.on == null)
 							transaction.on =  On.ANY;
+						if (transaction.to == null)
+							transaction.to =  To.UP;
 					}
 				}
 			}

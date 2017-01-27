@@ -109,9 +109,6 @@ public class PNode
 		if (lexeme != null)
 			stringBuilder
 				.append(lexeme.toString());
-		if (!lexemes.isEmpty())
-			stringBuilder
-				.append(lexemes.toString());
 					
 		stringBuilder
 			.append("]");
@@ -124,7 +121,9 @@ public class PNode
 		return toText("");
 	}
 	
-	private String indentationString = "-    ";
+	private String indentationString = "     ";
+	private boolean forceBrackets = true;
+	private boolean forceBracketsHard = false;
 	
 	private String toText(String _indentationString)
 	{
@@ -135,9 +134,40 @@ public class PNode
 		stringBuilder
 			.append(this);
 		
-		if (!childs.isEmpty())
+		if (!lexemes.isEmpty() || forceBracketsHard)
 		{
-			if (childs.size() > 1)
+			if (lexemes.size() > 1 || forceBrackets)
+			{
+				stringBuilder
+					.append('\n')
+					.append(_indentationString)
+					.append('<');
+			
+				for (Lexeme lexeme : lexemes)
+				{
+					stringBuilder
+						.append('\n')
+						.append(nextIndentationString)
+						.append(lexeme.toString());
+				}
+				
+				stringBuilder
+					.append('\n')
+					.append(_indentationString)
+					.append(">");
+			}
+			else
+			{
+				stringBuilder
+				.append('\n')
+				.append(nextIndentationString)
+				.append(lexemes.get(0).toString());
+			}
+		}
+		
+		if (!childs.isEmpty() || forceBracketsHard)
+		{
+			if (childs.size() > 1 || forceBrackets)
 			{
 				stringBuilder
 					.append('\n')

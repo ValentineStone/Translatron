@@ -31,9 +31,7 @@ public class Main
 		
 		//PNode pnode = PNodeStateAssembly.assemble(lexemes, State.ROOT);
 		
-		Machine machine = JsonStateMachine.load(new File("res/stages.json"));
-		
-		System.err.println(machine);
+		Machine machine = JsonStateMachine.load(new File("res/stages2.json"));
 		
 		PNode pnode = JsonStateMachine.assemble(machine, lexemes);
 		

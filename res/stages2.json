@@ -1,5 +1,5 @@
 {
-	version: 1,
+	version: 2,
 	langType: "c++",
 	
 	stages:
@@ -26,36 +26,26 @@
 					transactions:
 					[
 						{ on:{type: "EOF"} },
-						{ on:{type: "BRACKET",text: "{"}, to:{stage: "simple-block"}, consume: false },
-						{ to:{stage: "simple-statement"} }
+						{ on:{type: "BRACKET",text: "{"}, to:{state: "simple-block"}},
+						{ to:{state: "simple-statement"} }
 					]
-				}
-			]
-		},
-		{
-			name: "simple-block",
-			states:
-			[
+				},
 				{
+					name: "simple-block",
 					transactions:
 					[
 						{ on:{type: "EOF"} },
 						{ on:{type: "BRACKET", text: "}"} },
 						{ to:{stage: "statement"} }
 					]
-				}
-			]
-		},
-		{
-			name: "simple-statement",
-			states:
-			[
+				},
 				{
+					name: "simple-statement",
 					transactions:
 					[
 						{ on:{type: "EOF"} },
 						{ on:{type: "SEPARATOR", text: ";"} },
-						{ to:{up:false} }
+						{ to:{state: "simple-statement"} }
 					]
 				}
 			]

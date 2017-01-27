@@ -7,10 +7,19 @@ public final class Transaction
 	private Transaction()
 	{}
 	
+	private Transaction(On _on, To _to)
+	{
+		on = _on;
+		to = _to;
+	}
+	
+	public static final Transaction UP_ON_EOF = new Transaction(On.EOF, To.UP);
+	
 	public String name = null;
 	public On on = On.ANY;
 	public To to = To.UP;
 	
+	public boolean consume = true;
 	
 	public String toString()
 	{
@@ -61,13 +70,25 @@ public final class Transaction
 final class On
 {
 	private On()
-	{}
+	{
+		type = null;
+		subtype = null;
+		text = null;
+	}
 	
-	public final Lexeme.Type type = null;
-	public final Lexeme.Subtype subtype = null;
-	public final String text = null;
+	private On(Lexeme.Type _type)
+	{
+		type = _type;
+		subtype = null;
+		text = null;
+	}
+	
+	public final Lexeme.Type type;
+	public final Lexeme.Subtype subtype;
+	public final String text;
 	
 	public static final On ANY = new On();
+	public static final On EOF = new On(Lexeme.Type.EOF);
 	
 	public String toString()
 	{
@@ -124,12 +145,20 @@ final class On
 final class To
 {
 	private To()
-	{}
+	{
+		up = false;
+	}
+	
+	private To(boolean _up)
+	{
+		up = _up;
+	}
 	
 	public final String stage = null;
 	public final String state = null;
+	public final boolean up;
 	
-	public static final To UP = new To();
+	public static final To UP = new To(true);
 	
 	public String toString()
 	{
@@ -167,6 +196,16 @@ final class To
 	
 	public boolean isUp()
 	{
-		return stage == null && state == null;
+		return up;
+	}
+	
+	public boolean isToState()
+	{
+		return stage == null;
+	}
+	
+	public boolean isToStage()
+	{
+		return stage != null;
 	}
 }
